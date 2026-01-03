@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CareCompanion AI | VIT-AP Wellness</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Outfit', sans-serif; background: linear-gradient(135deg, #e0f2fe 0%, #f0f9ff 100%); }
+        .glass { background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(10px); border: 1px solid rgba(255, 255, 255, 0.2); }
+    </style>
+</head>
+<body class="flex items-center justify-center min-h-screen p-6">
+
+    <div class="max-w-lg w-full glass rounded-[2rem] p-8 shadow-xl transition-all hover:shadow-2xl">
+        <div class="text-center mb-8">
+            <h1 class="text-4xl font-bold text-blue-900 tracking-tight">CareCompanion</h1>
+            <p class="text-blue-600 mt-2 font-medium">Your empathetic friend at VIT-AP</p>
+        </div>
+
+        <div class="space-y-4">
+            <label class="block text-sm font-semibold text-gray-700 ml-1">How was your day? Write freely...</label>
+            <textarea id="userInput" 
+                class="w-full h-40 p-5 rounded-2xl border-2 border-blue-100 focus:border-blue-400 focus:ring-0 outline-none transition-all resize-none text-gray-700 bg-blue-50/30"
+                placeholder="Ex: I'm feeling a bit lonely after a long day in the library..."></textarea>
+            
+            <button onclick="talkToGemini()" id="sendBtn" 
+                class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-4 rounded-2xl transition-all transform active:scale-95 shadow-lg shadow-blue-200">
+                Share with me
+            </button>
+        </div>
+
+        <div id="loading" class="hidden mt-8 text-center animate-pulse">
+            <span class="text-blue-500 font-medium italic">Listening carefully...</span>
+        </div>
+
+        <div id="responseArea" class="hidden mt-8 p-6 rounded-2xl bg-white border border-blue-100 shadow-sm animate-in fade-in slide-in-from-bottom-4 duration-500">
+            <div class="flex items-center mb-3">
+                <span class="bg-blue-100 text-blue-700 text-[10px] font-bold px-2 py-1 rounded-full uppercase tracking-widest">Companion</span>
+            </div>
+            <div id="aiText" class="text-gray-800 leading-relaxed italic text-lg"></div>
+        </div>
+
+        <div class="mt-10 pt-6 border-t border-blue-50 text-center">
+            <p class="text-xs text-gray-400 uppercase tracking-widest font-semibold mb-2">Need to talk to a human?</p>
+            <a href="#" class="text-blue-600 text-sm font-bold hover:underline decoration-2 underline-offset-4">Connect with VIT-AP Counseling</a>
+        </div>
+    </div>
+
+    <script>
+        async function talkToGemini() {
+            const input = document.getElementById('userInput').value;
+            const btn = document.getElementById('sendBtn');
+            const loading = document.getElementById('loading');
+            const responseArea = document.getElementById('responseArea');
+            const aiText = document.getElementById('aiText');
+
+            if (!input.trim()) return alert("I'm here to listen, please write something.");
+
+            // Reset UI
+            btn.disabled = true;
+            loading.classList.remove('hidden');
+            responseArea.classList.add('hidden');
+
+            // IMPORTANT: Replace 'YOUR_API_KEY' with your actual key from Google AI Studio
+            const API_KEY = "YOUR_API_KEY"; 
+            const URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${API_KEY}`;
+
+            try {
+                const response = await fetch(URL, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                        contents: [{
+                            parts: [{
+                                text: `Act as a kind, empathetic older sibling to a VIT-AP student. 
+                                Respond with deep empathy to this journal entry and suggest 
+                                one tiny campus-specific practical action (like walking at 
+                                the rock plaza or visiting the canteen): ${input}`
+                            }]
+                        }]
+                    })
+                });
+
+                const data = await response.json();
+                const result = data.candidates[0].content.parts[0].text;
+
+                aiText.innerText = result;
+                responseArea.classList.remove('hidden');
+            } catch (error) {
+                aiText.innerText = "I'm always here for you, but I'm having a technical glitch. Take a deep breath and try again in a moment.";
+                responseArea.classList.remove('hidden');
+            } finally {
+                loading.classList.add('hidden');
+                btn.disabled = false;
+            }
+        }
+    </script>
+</body>
+</html>
